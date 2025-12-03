@@ -6,7 +6,11 @@
 #include "ipps.h"
 #endif
 
-class PluginProcessor : public juce::AudioProcessor
+#include "dsp/HardClipper.h"
+#include "dsp/Blamp2Point.h"
+#include "dsp/Blamp4Point.h"
+
+class PluginProcessor : public juce::AudioProcessor, public juce::AudioProcessorParameter::Listener
 {
 public:
     PluginProcessor();
@@ -38,6 +42,25 @@ public:
     void getStateInformation (juce::MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
 
+    juce::AudioParameterFloat* threshold;
+    juce::AudioParameterChoice* clipperType;
+
 private:
+    void parameterGestureChanged(int parameterIndex, bool gestureIsStarting) override;
+    void parameterValueChanged(int parameterIndex, float newValue) override;
+
+    bool clipperChanged;
+    bool thresholdChanged;
+
+    HardClipper hardClipper;
+    Blamp2Point blamp2Point;
+    Blamp4Point blamp4Point;
+
+
+    std::vector<HardClipper*> clippers {&hardClipper, &blamp2Point, &blamp4Point};
+    HardClipper* activeClipper;
+
+    double fs{};
+    double samplesPerBlock{};
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PluginProcessor)
 };

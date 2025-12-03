@@ -12,6 +12,16 @@ PluginProcessor::PluginProcessor()
                      #endif
                        )
 {
+    addParameter(threshold = new juce::AudioParameterFloat (
+        "threshold", "Threshold", 0.0, 1.0, 0.5));
+    addParameter (clipperType = new juce::AudioParameterChoice(
+        "clippertype", "Clipper type", {"Naive", "2-point blamp", "4-point blamp"}, 1));
+
+    activeClipper = clippers[0];
+    threshold->addListener (this);
+    clipperType->addListener (this);
+    clipperChanged = true;
+    thresholdChanged = true;
 }
 
 PluginProcessor::~PluginProcessor()
@@ -84,11 +94,12 @@ void PluginProcessor::changeProgramName (int index, const juce::String& newName)
 }
 
 //==============================================================================
-void PluginProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
+void PluginProcessor::prepareToPlay (double sampleRate, int _samplesPerBlock)
 {
-    // Use this method as the place to do any pre-playback
-    // initialisation that you need..
-    juce::ignoreUnused (sampleRate, samplesPerBlock);
+    fs = sampleRate;
+    samplesPerBlock = _samplesPerBlock;
+
+    activeClipper->prepareToPlay (fs, samplesPerBlock);
 }
 
 void PluginProcessor::releaseResources()
@@ -122,6 +133,20 @@ bool PluginProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
 void PluginProcessor::processBlock (juce::AudioBuffer<float>& buffer,
                                               juce::MidiBuffer& midiMessages)
 {
+    if (clipperChanged)
+    {
+        auto index = clipperType->getIndex();
+        activeClipper = clippers[std::min(std::max(0, index), static_cast<int>(clippers.size() - 1))];
+        activeClipper->prepareToPlay (fs, samplesPerBlock);
+        activeClipper->setThreshold (*threshold);
+        std::cout << "clip type" << *clipperType << std::endl;
+        clipperChanged = false;
+    }
+    if (thresholdChanged)
+    {
+        activeClipper->setThreshold (*threshold);
+        thresholdChanged = false;
+    }
     juce::ignoreUnused (midiMessages);
 
     juce::ScopedNoDenormals noDenormals;
@@ -165,17 +190,36 @@ juce::AudioProcessorEditor* PluginProcessor::createEditor()
 //==============================================================================
 void PluginProcessor::getStateInformation (juce::MemoryBlock& destData)
 {
-    // You should use this method to store your parameters in the memory block.
-    // You could do that either as raw data, or use the XML or ValueTree classes
-    // as intermediaries to make it easy to save and load complex data.
-    juce::ignoreUnused (destData);
+    std::unique_ptr<juce::XmlElement> xml (new juce::XmlElement ("AHC"));
+    xml->setAttribute ("thresold", (double) *threshold);
+    xml->setAttribute ("clipperType", clipperType->getIndex());
+    copyXmlToBinary (*xml, destData);
 }
 
 void PluginProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
-    // You should use this method to restore your parameters from this memory block,
-    // whose contents will have been created by the getStateInformation() call.
-    juce::ignoreUnused (data, sizeInBytes);
+    std::unique_ptr<juce::XmlElement> xmlState (getXmlFromBinary (data, sizeInBytes));
+    if (xmlState.get() != nullptr && xmlState->hasTagName ("AHC"))
+    {
+        *threshold = static_cast<float> (xmlState->getDoubleAttribute ("gain", 1.0));
+        *clipperType = xmlState->getIntAttribute ("clipperType", 1);
+    }
+}
+
+void PluginProcessor::parameterGestureChanged (int parameterIndex, bool gestureIsStarting)
+{
+}
+
+void PluginProcessor::parameterValueChanged (int parameterIndex, float newValue)
+{
+    if (parameterIndex == threshold->getParameterIndex())
+    {
+        thresholdChanged = true;
+    }
+    else if (parameterIndex == clipperType->getParameterIndex())
+    {
+        clipperChanged = true;
+    }
 }
 
 //==============================================================================

@@ -1,3 +1,7 @@
+#include "dsp/Oversampler2Times.h"
+#include "dsp/Blamp2Point.h"
+#include "dsp/HardClipper.h"
+
 TEST_CASE ("Boot performance")
 {
     BENCHMARK_ADVANCED ("Processor constructor")
@@ -27,6 +31,120 @@ TEST_CASE ("Boot performance")
             plugin.editorBeingDeleted (editor);
             delete editor;
             return plugin.getActiveEditor();
+        });
+    };
+    BENCHMARK_ADVANCED ("Naive clip 200 hz")
+    (Catch::Benchmark::Chronometer meter)
+    {
+        HardClipper clipper;
+        auto buffer = juce::AudioBuffer<float> (1, 2048);
+        clipper.prepareToPlay (buffer.getNumSamples(), 44100);
+        auto freq = 100.0;
+        clipper.setThreshold (0.3f);
+        for (int i = 0; i < buffer.getNumSamples(); ++i)
+        {
+            buffer.setSample (0,i, std::cos(static_cast<double>(i) * freq * 2 * juce::MathConstants<double>::pi /44100.0));
+        }
+        clipper.processBlock (buffer);
+
+        // due to complex construction logic of the editor, let's measure open/close together
+        meter.measure ([&] (int /* i */) {
+            clipper.processBlock (buffer);
+        });
+    };
+    BENCHMARK_ADVANCED ("2 point blamp 200 hz")
+    (Catch::Benchmark::Chronometer meter)
+    {
+        Blamp2Point clipper;
+        auto buffer = juce::AudioBuffer<float> (1, 2048);
+        clipper.prepareToPlay (buffer.getNumSamples(), 44100);
+        auto freq = 100.0;
+        clipper.setThreshold (0.3f);
+        for (int i = 0; i < buffer.getNumSamples(); ++i)
+        {
+            buffer.setSample (0,i, std::cos(static_cast<double>(i) * freq * 2 * juce::MathConstants<double>::pi /44100.0));
+        }
+        clipper.processBlock (buffer);
+
+        // due to complex construction logic of the editor, let's measure open/close together
+        meter.measure ([&] (int /* i */) {
+            clipper.processBlock (buffer);
+        });
+    };
+    BENCHMARK_ADVANCED ("2 point oversample 200 hz")
+    (Catch::Benchmark::Chronometer meter)
+    {
+        Oversampler2Times clipper;
+        auto buffer = juce::AudioBuffer<float> (1, 2048);
+        clipper.prepareToPlay (buffer.getNumSamples(), 44100);
+        auto freq = 100.0;
+        clipper.setThreshold (0.3f);
+        for (int i = 0; i < buffer.getNumSamples(); ++i)
+        {
+            buffer.setSample (0,i, std::cos(static_cast<double>(i) * freq * 2 * juce::MathConstants<double>::pi /44100.0));
+        }
+        clipper.processBlock (buffer);
+
+        // due to complex construction logic of the editor, let's measure open/close together
+        meter.measure ([&] (int /* i */) {
+            clipper.processBlock (buffer);
+        });
+    };
+    BENCHMARK_ADVANCED ("Naive clip 3000 hz")
+    (Catch::Benchmark::Chronometer meter)
+    {
+        HardClipper clipper;
+        auto buffer = juce::AudioBuffer<float> (1, 2048);
+        clipper.prepareToPlay (buffer.getNumSamples(), 44100);
+        auto freq = 3000.0;
+        clipper.setThreshold (0.3f);
+        for (int i = 0; i < buffer.getNumSamples(); ++i)
+        {
+            buffer.setSample (0,i, std::cos(static_cast<double>(i) * freq * 2 * juce::MathConstants<double>::pi /44100.0));
+        }
+        clipper.processBlock (buffer);
+
+        // due to complex construction logic of the editor, let's measure open/close together
+        meter.measure ([&] (int /* i */) {
+            clipper.processBlock (buffer);
+        });
+    };
+    BENCHMARK_ADVANCED ("2 point blamp 3000 hz")
+    (Catch::Benchmark::Chronometer meter)
+    {
+        Blamp2Point clipper;
+        auto buffer = juce::AudioBuffer<float> (1, 2048);
+        clipper.prepareToPlay (buffer.getNumSamples(), 44100);
+        auto freq = 3000.0;
+        clipper.setThreshold (0.3f);
+        for (int i = 0; i < buffer.getNumSamples(); ++i)
+        {
+            buffer.setSample (0,i, std::cos(static_cast<double>(i) * freq * 2 * juce::MathConstants<double>::pi /44100.0));
+        }
+        clipper.processBlock (buffer);
+
+        // due to complex construction logic of the editor, let's measure open/close together
+        meter.measure ([&] (int /* i */) {
+            clipper.processBlock (buffer);
+        });
+    };
+    BENCHMARK_ADVANCED ("2 point oversample 3000 hz")
+    (Catch::Benchmark::Chronometer meter)
+    {
+        Oversampler2Times clipper;
+        auto buffer = juce::AudioBuffer<float> (1, 2048);
+        clipper.prepareToPlay (buffer.getNumSamples(), 44100);
+        auto freq = 3000.0;
+        clipper.setThreshold (0.3f);
+        for (int i = 0; i < buffer.getNumSamples(); ++i)
+        {
+            buffer.setSample (0,i, std::cos(static_cast<double>(i) * freq * 2 * juce::MathConstants<double>::pi /44100.0));
+        }
+        clipper.processBlock (buffer);
+
+        // due to complex construction logic of the editor, let's measure open/close together
+        meter.measure ([&] (int /* i */) {
+            clipper.processBlock (buffer);
         });
     };
 }
