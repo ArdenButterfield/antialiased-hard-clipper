@@ -70,7 +70,6 @@ void PluginEditor::sliderDragStarted (juce::Slider* slider)
 
 void PluginEditor::comboBoxChanged (juce::ComboBox* comboBoxThatHasChanged)
 {
-    std::cout << "comboboxchanged " <<comboBoxThatHasChanged->getSelectedId() << std::endl;
     *processorRef.clipperType = clippingType.getSelectedId() - 1;
 }
 

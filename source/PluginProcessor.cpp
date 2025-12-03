@@ -15,7 +15,7 @@ PluginProcessor::PluginProcessor()
     addParameter(threshold = new juce::AudioParameterFloat (
         "threshold", "Threshold", 0.0, 1.0, 0.5));
     addParameter (clipperType = new juce::AudioParameterChoice(
-        "clippertype", "Clipper type", {"Naive", "2-point blamp", "4-point blamp"}, 1));
+        "clippertype", "Clipper type", {"Naive", "2-point blamp", "4-point blamp", "Oversample x2"}, 1));
 
     activeClipper = clippers[0];
     threshold->addListener (this);
@@ -139,7 +139,6 @@ void PluginProcessor::processBlock (juce::AudioBuffer<float>& buffer,
         activeClipper = clippers[std::min(std::max(0, index), static_cast<int>(clippers.size() - 1))];
         activeClipper->prepareToPlay (fs, samplesPerBlock);
         activeClipper->setThreshold (*threshold);
-        std::cout << "clip type" << *clipperType << std::endl;
         clipperChanged = false;
     }
     if (thresholdChanged)
@@ -162,18 +161,7 @@ void PluginProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
 
-    // This is the place where you'd normally do the guts of your plugin's
-    // audio processing...
-    // Make sure to reset the state if your inner loop is processing
-    // the samples and the outer loop is handling the channels.
-    // Alternatively, you can process the samples with the channels
-    // interleaved by keeping the same state.
-    for (int channel = 0; channel < totalNumInputChannels; ++channel)
-    {
-        auto* channelData = buffer.getWritePointer (channel);
-        juce::ignoreUnused (channelData);
-        // ..do something to the data...
-    }
+    activeClipper->processBlock (buffer);
 }
 
 //==============================================================================

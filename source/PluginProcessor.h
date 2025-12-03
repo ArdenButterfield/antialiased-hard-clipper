@@ -1,5 +1,6 @@
 #pragma once
 
+
 #include <juce_audio_processors/juce_audio_processors.h>
 
 #if (MSVC)
@@ -9,6 +10,7 @@
 #include "dsp/HardClipper.h"
 #include "dsp/Blamp2Point.h"
 #include "dsp/Blamp4Point.h"
+#include "dsp/Oversampler2Times.h"
 
 class PluginProcessor : public juce::AudioProcessor, public juce::AudioProcessorParameter::Listener
 {
@@ -55,9 +57,9 @@ private:
     HardClipper hardClipper;
     Blamp2Point blamp2Point;
     Blamp4Point blamp4Point;
+    Oversampler2Times oversampler2Times;
 
-
-    std::vector<HardClipper*> clippers {&hardClipper, &blamp2Point, &blamp4Point};
+    std::vector<HardClipper*> clippers {&hardClipper, &blamp2Point, &blamp4Point, &oversampler2Times};
     HardClipper* activeClipper;
 
     double fs{};
