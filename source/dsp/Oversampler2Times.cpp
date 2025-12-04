@@ -41,17 +41,19 @@ void Oversampler2Times::processBlock (juce::AudioBuffer<float>& buffer)
             auto prev_prev_pos = (state.position + 2) % 4;
             auto next_pos = (state.position + 1) % 4;
 
-            state.oversampled[state.position] = ptr[s];
-            state.oversampled[prev_pos] += ptr[s] / 2;
-            state.oversampled[next_pos] = ptr[s] / 2;
+            state.oversampled[state.position] = ptr[s] * 1.0f;
+            state.oversampled[prev_pos] += ptr[s] * 0.5f;
+            state.oversampled[next_pos] = ptr[s] * 0.5f;
 
             state.oversampledOut[pos] = std::min(std::max(lowThreshold, state.oversampled[pos]), highThreshold);
             state.oversampledOut[prev_pos] = std::min(std::max(lowThreshold, state.oversampled[prev_pos]), highThreshold);
 
             ptr[s] =
-                state.oversampledOut[prev_prev_pos] / 2 +
-                state.oversampledOut[prev_pos] +
-                state.oversampledOut[pos] / 2;
+                state.oversampledOut[prev_prev_pos] * 0.25f +
+                state.oversampledOut[prev_pos] * 0.5f +
+                state.oversampledOut[pos] * 0.25f;
+
+            state.position = (state.position + 2) % 4;
         }
     }
 }

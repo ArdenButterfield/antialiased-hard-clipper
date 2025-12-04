@@ -25,6 +25,27 @@ TEST_CASE ("Plugin instance", "[instance]")
     }
 }
 
+TEST_CASE ("Oversample stuff", "[ovs]")
+{
+    auto buffer = juce::AudioBuffer<float>(1, 100);
+    for (auto sample = 0; sample < buffer.getNumSamples(); ++sample)
+    {
+        buffer.setSample (0, sample, sample % 20 < 10 ? 1.0f : 0.0f);
+        std::cout << buffer.getSample (0, sample) << "\t";
+    }
+    std::cout << std::endl;
+
+    auto clipper = Oversampler2Times();
+    clipper.prepareToPlay (100, 44100);
+    clipper.setThreshold (0.5f);
+    clipper.processBlock (buffer);
+    for (auto sample = 0; sample < buffer.getNumSamples(); ++sample)
+    {
+        std::cout << buffer.getSample (0, sample) << "\t";
+    }
+    std::cout << std::endl;
+}
+
 void testForClicks(HardClipper& clipper)
 {
     clipper.setThreshold (0.5f);
