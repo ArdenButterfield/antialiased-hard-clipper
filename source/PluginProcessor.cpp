@@ -15,7 +15,7 @@ PluginProcessor::PluginProcessor()
     addParameter(threshold = new juce::AudioParameterFloat (
         "threshold", "Threshold", 0.0, 1.0, 0.5));
     addParameter (clipperType = new juce::AudioParameterChoice(
-        "clippertype", "Clipper type", {"Naive", "2-point blamp", "4-point blamp", "Oversample x2"}, 1));
+        "clippertype", "Clipper type", {"Naive", "2-point blamp", "4-point blamp", "Oversample x2", "Oversampler x4"}, 1));
 
     activeClipper = clippers[0];
     threshold->addListener (this);

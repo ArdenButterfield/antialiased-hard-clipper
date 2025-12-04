@@ -11,6 +11,7 @@
 #include "dsp/Blamp2Point.h"
 #include "dsp/Blamp4Point.h"
 #include "dsp/Oversampler2Times.h"
+#include "dsp/Oversampler4Times.h"
 
 class PluginProcessor : public juce::AudioProcessor, public juce::AudioProcessorParameter::Listener
 {
@@ -58,8 +59,9 @@ private:
     Blamp2Point blamp2Point;
     Blamp4Point blamp4Point;
     Oversampler2Times oversampler2Times;
+    Oversampler4Times oversampler4Times;
 
-    std::vector<HardClipper*> clippers {&hardClipper, &blamp2Point, &blamp4Point, &oversampler2Times};
+    std::vector<HardClipper*> clippers {&hardClipper, &blamp2Point, &blamp4Point, &oversampler2Times, &oversampler4Times};
     HardClipper* activeClipper;
 
     double fs{};
