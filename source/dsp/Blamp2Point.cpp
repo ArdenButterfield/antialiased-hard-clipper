@@ -8,6 +8,8 @@
 
 #include <cmath>
 
+#define DO_CORRECTION 0
+
 Blamp2Point::Blamp2Point()
 {
 }
@@ -44,7 +46,19 @@ void Blamp2Point::processBlock (juce::AudioBuffer<float>& buffer)
             if (state.flag != state.flag_previous)
             {
                 auto m = ptr[sample] - state.x_n1;
-                auto d = ((state.x_n1 > 0 ? highThreshold : lowThreshold) - state.x_n1) / m;
+                float d;
+#if DO_CORRECTION
+                if (state.flag == true)
+                {
+                    d = ((ptr[sample] > 0 ? highThreshold : lowThreshold) - state.x_n1) / m;
+                } else
+                {
+                    d = ((state.x_n1 > 0 ? highThreshold : lowThreshold) - state.x_n1) / m;
+                }
+#else
+                d = ((state.x_n1 > 0 ? highThreshold : lowThreshold) - state.x_n1) / m;
+#endif
+
                 auto p1 = - (d * d * d) / 6.0f + (d * 2) / 2.0f - d / 2.0f + 1 / 6.0f;
                 auto p0 = (d * d * d) / 6.0f;
                 state.y_n1 -= state.x_n1 > 0 ? (std::abs(m) * p1) : -(std::abs(m) * p1);

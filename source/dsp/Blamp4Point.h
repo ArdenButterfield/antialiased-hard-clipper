@@ -12,7 +12,20 @@ class Blamp4Point : public HardClipper
 public:
     Blamp4Point() = default;
     ~Blamp4Point() override = default;
+    void prepareToPlay(int samplesPerBlockExpected, double sampleRate) override;
     void processBlock (juce::AudioBuffer<float>& buffer) override;
+private:
+    struct ChannelState
+    {
+        std::array<float, 4> inputSamples;
+        std::array<float, 4> outputSamples;
+        int inputSampleIndex = 0;
+        int flag = false;
+        int prevFlag = false;
+    };
+
+    std::vector<ChannelState> channelStates;
 };
+
 
 #endif //ANTIALIASEDHARDCLIPPER_BLAMP4POINT_H

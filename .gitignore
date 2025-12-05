@@ -25,4 +25,6 @@ Testing
 
 # clion cmake builds
 cmake-build-*
-packaging/Output/*z
+packaging/Output/*
+
+Analysis-and-graphs/outfiles

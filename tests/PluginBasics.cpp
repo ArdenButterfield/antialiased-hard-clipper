@@ -4,6 +4,8 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_string.hpp>
 
+#include <juce_audio_formats/juce_audio_formats.h>
+
 #include "dsp/Blamp2Point.h"
 #include "dsp/Blamp4Point.h"
 #include "dsp/HardClipper.h"
@@ -25,25 +27,85 @@ TEST_CASE ("Plugin instance", "[instance]")
     }
 }
 
+void generateSineTone(juce::AudioBuffer<float>& buffer, float frequency)
+{
+    auto angleDelta = frequency * juce::MathConstants<float>::twoPi / 44100.0f;
+    auto angle = 0.f;
+    for (int s = 0; s < buffer.getNumSamples(); ++s)
+    {
+        angle += angleDelta;
+        while (angle >= juce::MathConstants<float>::twoPi)
+        {
+            angle -= juce::MathConstants<float>::twoPi;
+        }
+        auto x = cos(angle);
+        for (int channel = 0; channel < buffer.getNumChannels(); ++channel)
+        {
+            buffer.setSample (channel, s, x);
+        }
+    }
+}
+
+void writeToFile(juce::AudioBuffer<float>& buffer, juce::File& file)
+{
+    juce::WavAudioFormat format;
+    std::unique_ptr<juce::AudioFormatWriter> writer;
+    std::unique_ptr<juce::OutputStream> fileStream = std::make_unique<juce::FileOutputStream>(file);
+    writer = format.createWriterFor (fileStream, juce::AudioFormatWriterOptions ()
+        .withSampleRate (44100).withNumChannels (buffer.getNumChannels()).withBitsPerSample (24));
+    if (writer != nullptr)
+    {
+        writer->writeFromAudioSampleBuffer (buffer, 0, buffer.getNumSamples());
+    } else
+    {
+        std::cerr << "Could not open output file" << std::endl;
+    }
+}
+
+TEST_CASE ("Write outputs for graphs", "[writes]")
+{
+    auto naiveClipper = HardClipper();
+    auto oversampler2x = Oversampler2Times();
+    auto oversampler4x = Oversampler4Times();
+    auto blamp2x = Blamp2Point();
+
+    std::vector<juce::String> names = {"naive", "oversampler2x", "oversampler4x", "blamp2x"};
+    std::vector<HardClipper*> clippers = {&naiveClipper, &oversampler2x, &oversampler4x, &blamp2x};
+    auto buf = juce::AudioBuffer<float>(1, 65536 /* 2 ** 16 */);
+
+    for (int frequency = 50; frequency <= 20000; frequency += 50)
+    {
+        std::cout << frequency << std::endl;
+        for (int clipper = 0; clipper < clippers.size(); ++clipper)
+        {
+            for (float thresh = 1.0f; thresh >= 0.01f; thresh /= 2.f)
+            {
+                generateSineTone (buf, frequency);
+                clippers[clipper]->prepareToPlay (buf.getNumSamples(), 44100);
+                clippers[clipper]->setThreshold (thresh);
+                clippers[clipper]->processBlock (buf);
+                auto outFile = juce::File(juce::File::getCurrentWorkingDirectory().getParentDirectory().getChildFile (
+                    "Analysis-and-graphs/outfiles/" + names[clipper] + "_" + juce::String(frequency) + "_" + juce::String(thresh) + "_thresh.wav"));
+                writeToFile (buf, outFile);
+            }
+        }
+    }
+
+}
+
+
 TEST_CASE ("Oversample stuff", "[ovs]")
 {
     auto buffer = juce::AudioBuffer<float>(1, 100);
     for (auto sample = 0; sample < buffer.getNumSamples(); ++sample)
     {
         buffer.setSample (0, sample, sample % 20 < 10 ? 1.0f : 0.0f);
-        std::cout << buffer.getSample (0, sample) << "\t";
     }
-    std::cout << std::endl;
 
     auto clipper = Oversampler2Times();
     clipper.prepareToPlay (100, 44100);
     clipper.setThreshold (0.5f);
     clipper.processBlock (buffer);
-    for (auto sample = 0; sample < buffer.getNumSamples(); ++sample)
-    {
-        std::cout << buffer.getSample (0, sample) << "\t";
-    }
-    std::cout << std::endl;
 }
 
 void testForClicks(HardClipper& clipper)
