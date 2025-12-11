@@ -4,6 +4,11 @@
 
 #include "Blamp4Point.h"
 
+#include "boost/math/tools/roots.hpp"
+
+#include <boost/math/interpolators/cubic_b_spline.hpp>
+
+
 void Blamp4Point::prepareToPlay (int samplesPerBlockExpected, double sampleRate)
 {
     channelStates.resize (0);
@@ -80,4 +85,21 @@ void Blamp4Point::processBlock (juce::AudioBuffer<float>& buffer)
             state.prevFlag = state.flag;
         }
     }
+}
+
+float Blamp4Point::findCubicRoot (const std::array<float, 5>& y)
+{
+    if ((y[1] > 0) != (y[2] > 0))
+    {
+        boost::math::cubic_b_spline<float> spline(y.data(), y.size(), 0, 1);
+
+        auto termination = [](float left, float right) {
+            return abs(left - right) < 1e-6;
+        };
+        std::uintmax_t iterations = 100;
+
+        auto f_n = [=](float t) { return std::make_pair(spline(t), spline.prime(t)); };
+        return boost::math::tools::newton_raphson_iterate(f_n, 1.5f, 1.0f, 2.0f, 20, iterations);
+    }
+    jassert(false);
 }

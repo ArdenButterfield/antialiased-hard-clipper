@@ -14,6 +14,7 @@ public:
     ~Blamp4Point() override = default;
     void prepareToPlay(int samplesPerBlockExpected, double sampleRate) override;
     void processBlock (juce::AudioBuffer<float>& buffer) override;
+    static float findCubicRoot(const std::array<float, 5>& y);
 private:
     struct ChannelState
     {

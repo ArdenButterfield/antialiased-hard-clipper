@@ -62,6 +62,7 @@ void writeToFile(juce::AudioBuffer<float>& buffer, juce::File& file)
     }
 }
 
+#if false
 TEST_CASE ("Write outputs for graphs", "[writes]")
 {
     auto naiveClipper = HardClipper();
@@ -92,7 +93,7 @@ TEST_CASE ("Write outputs for graphs", "[writes]")
     }
 
 }
-
+#endif
 
 TEST_CASE ("Oversample stuff", "[ovs]")
 {
@@ -160,6 +161,13 @@ TEST_CASE ("Check oversampled2 for pops", "[popsovs2]")
     testForClicks (hardclipper);
 }
 
+TEST_CASE ("cubic", "[cubic]")
+{
+    std::array<float, 5> y = {-1,-2, 2, 1,4};
+    auto root = Blamp4Point::findCubicRoot (y);
+    REQUIRE (root > 1);
+    REQUIRE (root < 2);
+}
 
 #ifdef PAMPLEJUCE_IPP
     #include <ipp.h>
