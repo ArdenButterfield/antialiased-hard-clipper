@@ -62,15 +62,29 @@ void Blamp4PointCubic::processBlock (juce::AudioBuffer<float>& buffer)
                     interpolationPoints[4] = x_2after - lowThreshold;
                 }
 
-                jassert ((interpolationPoints[2] > 0) != (interpolationPoints[3] > 0));
+
                 boost::math::cubic_b_spline<float> spline(interpolationPoints.data(), interpolationPoints.size(), 0, 1);
+                float intersectionPoint, slope;
+                if (interpolationPoints[2] == 0)
+                {
+                    intersectionPoint = 0;
+                    slope = spline.prime(2);
+                } else if (interpolationPoints[3] == 0)
+                {
+                    intersectionPoint = 1;
+                    slope = spline.prime(3);
+                } else
+                {
+                    std::uintmax_t iterations = 100;
+                    auto termination = [](double left, double right) {
+                        return std::abs(left-right) < 0.0001;
+                    };
 
-                std::uintmax_t iterations = 100;
+                    auto root = boost::math::tools::bisect(spline, 2.0f, 3.0f, termination, iterations).first;
+                    intersectionPoint = root - 2;
+                    slope = spline.prime(root);
+                }
 
-                auto f_n = [=](float t) { return std::make_pair(spline(t), spline.prime(t)); };
-                auto root = boost::math::tools::newton_raphson_iterate(f_n, 2.5f, 1.99f, 3.01f, 20, iterations);
-                auto intersectionPoint = root - 2;
-                auto slope = spline.prime(root);
 
                 auto d = intersectionPoint;
                 auto d2 = d * d;

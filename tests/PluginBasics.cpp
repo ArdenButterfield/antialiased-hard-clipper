@@ -169,6 +169,24 @@ TEST_CASE ("cubic", "[cubic]")
     REQUIRE (root < 3);
 }
 
+#include "boost/math/tools/roots.hpp"
+#include "boost/math/interpolators/cubic_b_spline.hpp"
+
+TEST_CASE("why no root", "[root]")
+{
+    std::array<float, 5> interpolationPoints = {-0.444532, -0.353807, -0.00238678, 0.010602, 0};
+    boost::math::cubic_b_spline<float> spline(interpolationPoints.data(), interpolationPoints.size(), 0, 1);
+    std::uintmax_t iterations = 100;
+    auto termination = [](double left, double right) {
+        return std::abs(left-right) < 0.0001;
+    };
+    auto root = boost::math::tools::bisect(spline, 2.0f, 3.0f, termination, iterations).first;
+    auto slope = spline.prime (root);
+    REQUIRE (root > 2);
+    REQUIRE (root < 3);
+    REQUIRE (slope > 0);
+}
+
 #ifdef PAMPLEJUCE_IPP
     #include <ipp.h>
 
