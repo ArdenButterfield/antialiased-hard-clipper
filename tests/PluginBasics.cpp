@@ -163,10 +163,10 @@ TEST_CASE ("Check oversampled2 for pops", "[popsovs2]")
 
 TEST_CASE ("cubic", "[cubic]")
 {
-    std::array<float, 5> y = {-1,-2, 2, 1,4};
-    auto root = Blamp4Point::findCubicRoot (y);
-    REQUIRE (root > 1);
-    REQUIRE (root < 2);
+    std::array<float, 5> y = {-1,-1,-2, 2, 1};
+    auto root = Blamp4PointCubic::findCubicRoot (y);
+    REQUIRE (root > 2);
+    REQUIRE (root < 3);
 }
 
 #ifdef PAMPLEJUCE_IPP

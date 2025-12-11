@@ -1,5 +1,6 @@
 #pragma once
 
+#include "dsp/Blamp4PointCubic.h"
 
 #include <juce_audio_processors/juce_audio_processors.h>
 
@@ -58,10 +59,18 @@ private:
     HardClipper hardClipper;
     Blamp2Point blamp2Point;
     Blamp4Point blamp4Point;
+    Blamp4PointCubic blamp4PointCubic;
     Oversampler2Times oversampler2Times;
     Oversampler4Times oversampler4Times;
 
-    std::vector<HardClipper*> clippers {&hardClipper, &blamp2Point, &blamp4Point, &oversampler2Times, &oversampler4Times};
+    std::vector<HardClipper*> clippers {
+        &hardClipper,
+        &blamp2Point,
+        &blamp4Point,
+        &blamp4PointCubic,
+        &oversampler2Times,
+        &oversampler4Times};
+
     HardClipper* activeClipper;
 
     double fs{};

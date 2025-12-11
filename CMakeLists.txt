@@ -93,7 +93,6 @@ juce_add_plugin("${PROJECT_NAME}"
 # Without running into ODR violations
 add_library(SharedCode INTERFACE)
 
-add_subdirectory(boost)
 target_include_directories(SharedCode INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/boost/libs/math/include")
 
 clap_juce_extensions_plugin(TARGET "${PROJECT_NAME}"

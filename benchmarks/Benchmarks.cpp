@@ -92,6 +92,25 @@ TEST_CASE ("Boot performance")
             clipper.processBlock (buffer);
         });
     };
+    BENCHMARK_ADVANCED ("4 point blamp cubic 200 hz")
+    (Catch::Benchmark::Chronometer meter)
+    {
+        Blamp4PointCubic clipper;
+        auto buffer = juce::AudioBuffer<float> (1, 2048);
+        clipper.prepareToPlay (buffer.getNumSamples(), 44100);
+        auto freq = 100.0;
+        clipper.setThreshold (0.3f);
+        for (int i = 0; i < buffer.getNumSamples(); ++i)
+        {
+            buffer.setSample (0,i, std::cos(static_cast<double>(i) * freq * 2 * juce::MathConstants<double>::pi /44100.0));
+        }
+        clipper.processBlock (buffer);
+
+        // due to complex construction logic of the editor, let's measure open/close together
+        meter.measure ([&] (int /* i */) {
+            clipper.processBlock (buffer);
+        });
+    };
     BENCHMARK_ADVANCED ("2 point oversample 200 hz")
     (Catch::Benchmark::Chronometer meter)
     {
@@ -172,6 +191,25 @@ TEST_CASE ("Boot performance")
     (Catch::Benchmark::Chronometer meter)
     {
         Blamp4Point clipper;
+        auto buffer = juce::AudioBuffer<float> (1, 2048);
+        clipper.prepareToPlay (buffer.getNumSamples(), 44100);
+        auto freq = 3000.0;
+        clipper.setThreshold (0.3f);
+        for (int i = 0; i < buffer.getNumSamples(); ++i)
+        {
+            buffer.setSample (0,i, std::cos(static_cast<double>(i) * freq * 2 * juce::MathConstants<double>::pi /44100.0));
+        }
+        clipper.processBlock (buffer);
+
+        // due to complex construction logic of the editor, let's measure open/close together
+        meter.measure ([&] (int /* i */) {
+            clipper.processBlock (buffer);
+        });
+    };
+    BENCHMARK_ADVANCED ("4 point blamp cubic 3000 hz")
+    (Catch::Benchmark::Chronometer meter)
+    {
+        Blamp4PointCubic clipper;
         auto buffer = juce::AudioBuffer<float> (1, 2048);
         clipper.prepareToPlay (buffer.getNumSamples(), 44100);
         auto freq = 3000.0;

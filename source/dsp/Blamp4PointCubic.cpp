@@ -1,14 +1,17 @@
 //
-// Created by Arden on 12/2/2025.
+// Created by Arden on 12/11/2025.
 //
 
-#include "Blamp4Point.h"
+#include "Blamp4PointCubic.h"
+#include "boost/math/tools/roots.hpp"
+#include "boost/math/interpolators/cubic_b_spline.hpp"
 
-void Blamp4Point::prepareToPlay (int samplesPerBlockExpected, double sampleRate)
+void Blamp4PointCubic::prepareToPlay (int samplesPerBlockExpected, double sampleRate)
 {
     channelStates.resize (0);
 }
-void Blamp4Point::processBlock (juce::AudioBuffer<float>& buffer)
+
+void Blamp4PointCubic::processBlock (juce::AudioBuffer<float>& buffer)
 {
     if (buffer.getNumChannels() != channelStates.size())
     {
@@ -24,9 +27,10 @@ void Blamp4Point::processBlock (juce::AudioBuffer<float>& buffer)
             state.inputSamples[state.inputSampleIndex] = ptr[sample];
             state.outputSamples[state.inputSampleIndex] = std::min(std::max(lowThreshold, ptr[sample]), highThreshold);
 
-            auto x_2prev = state.inputSamples[(state.inputSampleIndex + 1) % state.inputSamples.size()];
-            auto x_1prev = state.inputSamples[(state.inputSampleIndex + 2) % state.inputSamples.size()];
-            auto x_1after = state.inputSamples[(state.inputSampleIndex + 3) % state.inputSamples.size()];
+            auto x_3prev = state.inputSamples[(state.inputSampleIndex + 1) % state.inputSamples.size()];
+            auto x_2prev = state.inputSamples[(state.inputSampleIndex + 2) % state.inputSamples.size()];
+            auto x_1prev = state.inputSamples[(state.inputSampleIndex + 3) % state.inputSamples.size()];
+            auto x_1after = state.inputSamples[(state.inputSampleIndex + 4) % state.inputSamples.size()];
             auto x_2after = state.inputSamples[state.inputSampleIndex];
 
             if (x_1after >= highThreshold)
@@ -42,8 +46,31 @@ void Blamp4Point::processBlock (juce::AudioBuffer<float>& buffer)
 
             if (state.flag != state.prevFlag)
             {
-                auto slope = x_1after - x_1prev; // TODO: cubic polynomial fit instead, as described on page 5262. Does it make a difference?
-                auto intersectionPoint = (x_1prev > 0) ? (highThreshold - x_1prev) / slope : (lowThreshold - x_1prev) / slope;
+                if (state.flag == 1 or state.prevFlag == 1)
+                {
+                    interpolationPoints[0] = x_3prev - highThreshold;
+                    interpolationPoints[1] = x_2prev - highThreshold;
+                    interpolationPoints[2] = x_1prev - highThreshold;
+                    interpolationPoints[3] = x_1after - highThreshold;
+                    interpolationPoints[4] = x_2after - highThreshold;
+                } else
+                {
+                    interpolationPoints[0] = x_3prev - lowThreshold;
+                    interpolationPoints[1] = x_2prev - lowThreshold;
+                    interpolationPoints[2] = x_1prev - lowThreshold;
+                    interpolationPoints[3] = x_1after - lowThreshold;
+                    interpolationPoints[4] = x_2after - lowThreshold;
+                }
+
+                jassert ((interpolationPoints[2] > 0) != (interpolationPoints[3] > 0));
+                boost::math::cubic_b_spline<float> spline(interpolationPoints.data(), interpolationPoints.size(), 0, 1);
+
+                std::uintmax_t iterations = 100;
+
+                auto f_n = [=](float t) { return std::make_pair(spline(t), spline.prime(t)); };
+                auto root = boost::math::tools::newton_raphson_iterate(f_n, 2.5f, 1.99f, 3.01f, 20, iterations);
+                auto intersectionPoint = root - 2;
+                auto slope = spline.prime(root);
 
                 auto d = intersectionPoint;
                 auto d2 = d * d;
@@ -81,3 +108,17 @@ void Blamp4Point::processBlock (juce::AudioBuffer<float>& buffer)
     }
 }
 
+float Blamp4PointCubic::findCubicRoot (const std::array<float, 5>& y)
+{
+    if ((y[2] > 0) != (y[3] > 0))
+    {
+        boost::math::cubic_b_spline<float> spline(y.data(), y.size(), 0, 1);
+
+        std::uintmax_t iterations = 100;
+
+        auto f_n = [=](float t) { return std::make_pair(spline(t), spline.prime(t)); };
+        return boost::math::tools::newton_raphson_iterate(f_n, 2.5f, 2.0f, 3.0f, 20, iterations);
+    }
+    jassert(false);
+    return 0;
+}
