@@ -85,13 +85,21 @@ TEST_CASE ("Anti-aliasing method performance")
                     buffer.setSample (0,i, std::cos(static_cast<double>(i) * freq * 2 * juce::MathConstants<double>::pi /44100.0));
                 }
                 hardClippers[c]->processBlock (buffer);
-
-                // due to complex construction logic of the editor, let's measure open/close together
-                meter.measure ([&] (int /* i */) {
-                    hardClippers[c]->processBlock (buffer);
+                std::vector<juce::AudioBuffer<float>> buffers (size_t (meter.runs()));
+                for (int run = 0; run < meter.runs(); ++run)
+                {
+                    buffers[run] = juce::AudioBuffer<float>(1, 2048);
+                    for (int i = 0; i < buffer.getNumSamples(); ++i)
+                    {
+                        buffers[run].setSample (0,i, std::cos(static_cast<double>(i) * freq * 2 * juce::MathConstants<double>::pi /44100.0));
+                    }
+                }
+                meter.measure ([&] (int run) {
+                    hardClippers[c]->processBlock (buffers[run]);
                 });
             };
         }
+        /*
         BENCHMARK_ADVANCED (names[c] + " white noise")
         (Catch::Benchmark::Chronometer meter)
         {
@@ -104,11 +112,19 @@ TEST_CASE ("Anti-aliasing method performance")
                 buffer.setSample (0,i, random.nextFloat() * 2 - 1);
             }
             hardClippers[c]->processBlock (buffer);
-
-            // due to complex construction logic of the editor, let's measure open/close together
-            meter.measure ([&] (int /* i */) {
-                hardClippers[c]->processBlock (buffer);
+            std::vector<juce::AudioBuffer<float>> buffers (size_t (meter.runs()));
+            for (int run = 0; run < meter.runs(); ++run)
+            {
+                buffers[run] = juce::AudioBuffer<float>(1, 2048);
+                for (int i = 0; i < buffer.getNumSamples(); ++i)
+                {
+                buffer.setSample (0,i, random.nextFloat() * 2 - 1);
+                }
+            }
+            meter.measure ([&] (int run) {
+                hardClippers[c]->processBlock (buffers[run]);
             });
         };
+    */
     }
 }

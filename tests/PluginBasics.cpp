@@ -187,6 +187,22 @@ TEST_CASE("why no root", "[root]")
     REQUIRE (slope > 0);
 }
 
+TEST_CASE("more no root with white noise", "[feaw]")
+{
+    auto clipper = Blamp4PointCubic();
+    auto buffer = juce::AudioBuffer<float> (1, 2048);
+    clipper.prepareToPlay (buffer.getNumSamples(), 44100);
+    juce::Random random;
+    clipper.setThreshold (0.3f);
+    for (int i = 0; i < buffer.getNumSamples(); ++i)
+    {
+        buffer.setSample (0,i, random.nextFloat() * 2 - 1);
+    }
+    clipper.processBlock (buffer);
+    clipper.processBlock (buffer);
+
+}
+
 #ifdef PAMPLEJUCE_IPP
     #include <ipp.h>
 
