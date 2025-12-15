@@ -43,7 +43,6 @@ TEST_CASE ("Anti-aliasing method performance")
     HardClipper clipper;
     Blamp2Point blamp;
     Blamp4Point blamp4;
-    Blamp4PointCubic blamp4Cubic;
     Oversampler2Times oversampler2;
     Oversampler4Times oversampler4;
 
@@ -51,7 +50,6 @@ TEST_CASE ("Anti-aliasing method performance")
         &clipper,
         &blamp,
         &blamp4,
-        &blamp4Cubic,
         &oversampler2,
         &oversampler4
     };
@@ -60,13 +58,12 @@ TEST_CASE ("Anti-aliasing method performance")
         "Naive clip",
         "Blamp 2",
         "Blamp 4",
-        "Blamp 4 Cubic",
-        "Oversampler2",
-        "Oversampler4",
+        "Oversampler 2",
+        "Oversampler 4",
     };
 
     std::vector<float> frequencies {
-        30.123, 300.123, 3000.123, 10000.123
+        30.123, 300.123, 1000.123, 3000.123, 6000.123, 10000.123
     };
 
     for (auto c = 0; c < hardClippers.size(); ++c)

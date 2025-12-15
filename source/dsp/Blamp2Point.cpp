@@ -33,24 +33,26 @@ void Blamp2Point::processBlock (juce::AudioBuffer<float>& buffer)
         auto ptr = buffer.getWritePointer (channel);
         for (auto sample = 0; sample < buffer.getNumSamples(); ++sample)
         {
-            if (std::abs(ptr[sample]) >= highThreshold)
+            auto x = ptr[sample];
+
+            if (std::abs(x) >= highThreshold)
             {
                 state.flag = true;
-                state.y_n = ptr[sample] > 0 ? highThreshold : lowThreshold;
+                state.y_n = x > 0 ? highThreshold : lowThreshold;
             } else
             {
                 state.flag = false;
-                state.y_n = ptr[sample];
+                state.y_n = x;
             }
 
             if (state.flag != state.flag_previous)
             {
-                auto m = ptr[sample] - state.x_n1;
+                auto m = x - state.x_n1;
                 float d;
 #if DO_CORRECTION
                 if (state.flag == true)
                 {
-                    d = ((ptr[sample] > 0 ? highThreshold : lowThreshold) - state.x_n1) / m;
+                    d = ((x > 0 ? highThreshold : lowThreshold) - state.x_n1) / m;
                 } else
                 {
                     d = ((state.x_n1 > 0 ? highThreshold : lowThreshold) - state.x_n1) / m;
@@ -59,16 +61,22 @@ void Blamp2Point::processBlock (juce::AudioBuffer<float>& buffer)
                 d = ((state.x_n1 > 0 ? highThreshold : lowThreshold) - state.x_n1) / m;
 #endif
 
-                auto p1 = - (d * d * d) / 6.0f + (d * 2) / 2.0f - d / 2.0f + 1 / 6.0f;
+                auto p1 = - (d * d * d) / 6.0f + (d * d) / 2.0f - d / 2.0f + 1 / 6.0f;
                 auto p0 = (d * d * d) / 6.0f;
-                state.y_n1 -= state.x_n1 > 0 ? (std::abs(m) * p1) : -(std::abs(m) * p1);
-                state.y_n -= state.x_n1 > 0 ? (std::abs(m) * p1) : -(std::abs(m) * p0);
+                state.y_n1 -= (state.x_n1 > 0) ? (std::abs(m) * p1) : (-std::abs(m) * p1);
+                state.y_n -= (state.x_n1 > 0) ? (std::abs(m) * p0) : (-std::abs(m) * p0);
             }
 
-            state.x_n1 = ptr[sample];
-            ptr[sample] = state.y_n1;
-            state.flag_previous = state.flag;
+            jassert ((sample > 10 && state.y_n > state.y_n1) ? (x > state.x_n1): true);
+            jassert ((sample > 10 && state.y_n < state.y_n1) ? (x < state.x_n1): true);
+
+            auto out = state.y_n1;
             state.y_n1 = state.y_n;
+
+            state.x_n1 = x;
+            state.flag_previous = state.flag;
+
+            ptr[sample] = out;
         }
     }
 }

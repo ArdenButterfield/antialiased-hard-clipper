@@ -58,24 +58,22 @@ void Blamp4Point::processBlock (juce::AudioBuffer<float>& buffer)
 
                 if (state.flag == 1 or state.prevFlag == 1)
                 {
-                    state.outputSamples[state.inputSampleIndex] -= std::abs(slope) * p0;
-                    state.outputSamples[(state.inputSampleIndex + 1) % state.inputSamples.size()] -= std::abs(slope) * p1;
+                    state.outputSamples[(state.inputSampleIndex + 1) % state.inputSamples.size()] -= std::abs(slope) * p3;
                     state.outputSamples[(state.inputSampleIndex + 2) % state.inputSamples.size()] -= std::abs(slope) * p2;
-                    state.outputSamples[(state.inputSampleIndex + 3) % state.inputSamples.size()] -= std::abs(slope) * p3;
+                    state.outputSamples[(state.inputSampleIndex + 3) % state.inputSamples.size()] -= std::abs(slope) * p1;
+                    state.outputSamples[(state.inputSampleIndex + 0) % state.inputSamples.size()] -= std::abs(slope) * p0;
                 } else
                 {
-                    state.outputSamples[state.inputSampleIndex] += std::abs(slope) * p0;
-                    state.outputSamples[(state.inputSampleIndex + 1) % state.inputSamples.size()] += std::abs(slope) * p1;
+                    state.outputSamples[(state.inputSampleIndex + 1) % state.inputSamples.size()] += std::abs(slope) * p3;
                     state.outputSamples[(state.inputSampleIndex + 2) % state.inputSamples.size()] += std::abs(slope) * p2;
-                    state.outputSamples[(state.inputSampleIndex + 3) % state.inputSamples.size()] += std::abs(slope) * p3;
+                    state.outputSamples[(state.inputSampleIndex + 3) % state.inputSamples.size()] += std::abs(slope) * p1;
+                    state.outputSamples[(state.inputSampleIndex + 0) % state.inputSamples.size()] += std::abs(slope) * p0;
                 }
             }
 
             ++state.inputSampleIndex;
             state.inputSampleIndex %= state.inputSamples.size();
-
-            ptr[sample] = state.outputSamples[state.inputSampleIndex];
-
+            ptr[sample] = state.outputSamples[(state.inputSampleIndex + 1) % state.inputSamples.size()];
             state.prevFlag = state.flag;
         }
     }

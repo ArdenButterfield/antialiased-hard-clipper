@@ -46,9 +46,9 @@ void Oversampler4Times::processBlock (juce::AudioBuffer<float>& buffer)
             state.oversampled[(state.position + 3) % 16] = in * 0.25f;
 
             state.oversampledOut[state.position] = std::min(std::max(lowThreshold, state.oversampled[state.position]), highThreshold);
-            state.oversampledOut[(state.position + 15) % 16] = std::min(std::max(lowThreshold, state.oversampled[(state.position + 7) % 16]), highThreshold);
-            state.oversampledOut[(state.position + 14) % 16] = std::min(std::max(lowThreshold, state.oversampled[(state.position + 6) % 16]), highThreshold);
-            state.oversampledOut[(state.position + 13) % 16] = std::min(std::max(lowThreshold, state.oversampled[(state.position + 5) % 16]), highThreshold);
+            state.oversampledOut[(state.position + 15) % 16] = std::min(std::max(lowThreshold, state.oversampled[(state.position + 15) % 16]), highThreshold);
+            state.oversampledOut[(state.position + 14) % 16] = std::min(std::max(lowThreshold, state.oversampled[(state.position + 14) % 16]), highThreshold);
+            state.oversampledOut[(state.position + 13) % 16] = std::min(std::max(lowThreshold, state.oversampled[(state.position + 13) % 16]), highThreshold);
 
             ptr[s] =
                 state.oversampledOut[state.position] * 0.25f/4 +
@@ -57,7 +57,7 @@ void Oversampler4Times::processBlock (juce::AudioBuffer<float>& buffer)
                 state.oversampledOut[(state.position + 13) % 16] * 1.0f/4 +
                 state.oversampledOut[(state.position + 12) % 16] * 0.75f/4 +
                 state.oversampledOut[(state.position + 11) % 16] * 0.5f/4 +
-                state.oversampledOut[(state.position + 10) % 16] * 0.5f/4;
+                state.oversampledOut[(state.position + 10) % 16] * 0.25f/4;
 
             state.position = (state.position + 4) % 16;
         }

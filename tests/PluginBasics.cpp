@@ -46,6 +46,16 @@ void generateSineTone(juce::AudioBuffer<float>& buffer, float frequency)
     }
 }
 
+TEST_CASE("Blamp4 has weird lumpy bits on the bottom", "[lumpy]")
+{
+    auto buffer = juce::AudioBuffer<float>(2, 1000);
+    generateSineTone(buffer, 2035.7);
+    auto clipper = Blamp4Point();
+    clipper.prepareToPlay (1000, 44100);
+    clipper.setThreshold (0.5f);
+    clipper.processBlock (buffer);
+}
+
 void writeToFile(juce::AudioBuffer<float>& buffer, juce::File& file)
 {
     juce::WavAudioFormat format;
@@ -61,7 +71,6 @@ void writeToFile(juce::AudioBuffer<float>& buffer, juce::File& file)
         std::cerr << "Could not open output file" << std::endl;
     }
 }
-
 #if false
 TEST_CASE ("Write outputs for graphs", "[writes]")
 {
@@ -69,12 +78,13 @@ TEST_CASE ("Write outputs for graphs", "[writes]")
     auto oversampler2x = Oversampler2Times();
     auto oversampler4x = Oversampler4Times();
     auto blamp2x = Blamp2Point();
+    auto blamp4x = Blamp4Point();
 
-    std::vector<juce::String> names = {"naive", "oversampler2x", "oversampler4x", "blamp2x"};
-    std::vector<HardClipper*> clippers = {&naiveClipper, &oversampler2x, &oversampler4x, &blamp2x};
+    std::vector<juce::String> names = {"naive", "oversampler2x", "oversampler4x", "blamp2x", "blamp4x"};
+    std::vector<HardClipper*> clippers = {&naiveClipper, &oversampler2x, &oversampler4x, &blamp2x, &blamp4x};
     auto buf = juce::AudioBuffer<float>(1, 65536 /* 2 ** 16 */);
 
-    for (int frequency = 50; frequency <= 20000; frequency += 50)
+    for (int frequency = 67; frequency <= 20017; frequency += 50)
     {
         std::cout << frequency << std::endl;
         for (int clipper = 0; clipper < clippers.size(); ++clipper)
@@ -200,7 +210,6 @@ TEST_CASE("more no root with white noise", "[feaw]")
     }
     clipper.processBlock (buffer);
     clipper.processBlock (buffer);
-
 }
 
 #ifdef PAMPLEJUCE_IPP

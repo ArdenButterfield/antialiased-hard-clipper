@@ -46,7 +46,7 @@ void Blamp4PointCubic::processBlock (juce::AudioBuffer<float>& buffer)
 
             if (state.flag != state.prevFlag)
             {
-                if (state.flag == 1 or state.prevFlag == 1)
+                if (state.flag == 1 || state.prevFlag == 1)
                 {
                     interpolationPoints[0] = x_3prev - highThreshold;
                     interpolationPoints[1] = x_2prev - highThreshold;
@@ -99,16 +99,16 @@ void Blamp4PointCubic::processBlock (juce::AudioBuffer<float>& buffer)
 
                 if (state.flag == 1 or state.prevFlag == 1)
                 {
-                    state.outputSamples[state.inputSampleIndex] -= std::abs(slope) * p0;
-                    state.outputSamples[(state.inputSampleIndex + 1) % state.inputSamples.size()] -= std::abs(slope) * p1;
-                    state.outputSamples[(state.inputSampleIndex + 2) % state.inputSamples.size()] -= std::abs(slope) * p2;
-                    state.outputSamples[(state.inputSampleIndex + 3) % state.inputSamples.size()] -= std::abs(slope) * p3;
+                    state.outputSamples[(state.inputSampleIndex + 1) % state.inputSamples.size()] -= std::abs(slope) * p0;
+                    state.outputSamples[(state.inputSampleIndex + 2) % state.inputSamples.size()] -= std::abs(slope) * p1;
+                    state.outputSamples[(state.inputSampleIndex + 3) % state.inputSamples.size()] -= std::abs(slope) * p2;
+                    state.outputSamples[(state.inputSampleIndex + 0) % state.inputSamples.size()] -= std::abs(slope) * p3;
                 } else
                 {
-                    state.outputSamples[state.inputSampleIndex] += std::abs(slope) * p0;
-                    state.outputSamples[(state.inputSampleIndex + 1) % state.inputSamples.size()] += std::abs(slope) * p1;
-                    state.outputSamples[(state.inputSampleIndex + 2) % state.inputSamples.size()] += std::abs(slope) * p2;
-                    state.outputSamples[(state.inputSampleIndex + 3) % state.inputSamples.size()] += std::abs(slope) * p3;
+                    state.outputSamples[(state.inputSampleIndex + 1) % state.inputSamples.size()] += std::abs(slope) * p0;
+                    state.outputSamples[(state.inputSampleIndex + 2) % state.inputSamples.size()] += std::abs(slope) * p1;
+                    state.outputSamples[(state.inputSampleIndex + 3) % state.inputSamples.size()] += std::abs(slope) * p2;
+                    state.outputSamples[(state.inputSampleIndex + 0) % state.inputSamples.size()] += std::abs(slope) * p3;
                 }
             }
 

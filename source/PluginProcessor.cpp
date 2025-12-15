@@ -138,12 +138,14 @@ void PluginProcessor::processBlock (juce::AudioBuffer<float>& buffer,
         auto index = clipperType->getIndex();
         activeClipper = clippers[std::min(std::max(0, index), static_cast<int>(clippers.size() - 1))];
         activeClipper->prepareToPlay (fs, samplesPerBlock);
-        activeClipper->setThreshold (*threshold);
+        float thresh = *threshold;
+        activeClipper->setThreshold (std::min(std::max(0.0001f, thresh), 1.f));
         clipperChanged = false;
     }
     if (thresholdChanged)
     {
-        activeClipper->setThreshold (*threshold);
+        float thresh = *threshold;
+        activeClipper->setThreshold (std::min(std::max(0.0001f, thresh), 1.f));
         thresholdChanged = false;
     }
     juce::ignoreUnused (midiMessages);
